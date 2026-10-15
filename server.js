@@ -155,5 +155,7 @@ app.delete("/api/admin/products/:id", adminOnly, (req, res) => {
   writeJson(productsFile, products);
   res.json({ ok: true });
 });
-
+app.get("/", (req, res) => {
+    res.sendFile(path.join(__dirname, "public", "index.html"));
+});
 app.listen(PORT, () => console.log(`DANZO MEN running at http://localhost:${PORT}`));
