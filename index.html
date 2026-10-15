@@ -361,13 +361,31 @@ function showCheckout() {
 }
 function submitOrder(e) {
   e.preventDefault();
-  alert("هذا نموذج تجريبي فقط. لم يُرسل أي طلب. يلزم ربط الموقع بخدمة آمنة لاستقبال الطلبات.");
 }
 renderCategories();
 renderProducts();
 saveCart();
 renderCart();
 </script>
-<script>function sendOrderToWhatsApp(orderId, totalAmount) { const phoneNum = "213796006953"; const name = document.getElementById('name') ? document.getElementById('name').value : ""; const phone = document.getElementById('phone') ? document.getElementById('phone').value : ""; const wilaya = document.getElementById('wilaya') ? document.getElementById('wilaya').value : ""; const baladiya = document.getElementById('baladiya') ? document.getElementById('baladiya').value : ""; const address = document.getElementById('address') ? document.getElementById('address').value : ""; const notes = document.getElementById('notes') && document.getElementById('notes').value ? document.getElementById('notes').value : "لا يوجد"; const msg = `📦 *طلب جديد عبر متجر DANZO!*\n\n` + `👤 *الاسم الكامل:* ${name}\n` + `📞 *رقم الهاتف:* ${phone}\n` + `📍 *الولاية:* ${wilaya}\n` + `🏙%EF%B8%8F *البلدية:* ${baladiya}\n` + `🏠 *العنوان بالتفصيل:* ${address}\n` + `📝 *ملاحظات:* ${notes}\n\n` + `💰 *المجموع:* ${totalAmount || ''} دج\n` + `🆔 *رقم الطلب:* ${orderId}`; window.open(`https://wa.me/${phoneNum}?text=` + encodeURIComponent(msg), '_blank'); }</script>
+<script>function sendOrderToWhatsApp(orderId, totalAmount) {
+    const phoneNum = "213796006953";
+    const name = document.getElementById('name') ? document.getElementById('name').value : "";
+    const phone = document.getElementById('phone') ? document.getElementById('phone').value : "";
+    const wilaya = document.getElementById('wilaya') ? document.getElementById('wilaya').value : "";
+    const baladiya = document.getElementById('baladiya') ? document.getElementById('baladiya').value : "";
+    const address = document.getElementById('address') ? document.getElementById('address').value : "";
+    const notes = document.getElementById('notes') && document.getElementById('notes').value ? document.getElementById('notes').value : "لا يوجد";
+
+    const msg = 📦 *طلب جديد عبر متجر DANZO!*\n\n +
+        👤 *الاسم الكامل:* ${name}\n +
+        📞 *رقم الهاتف:* ${phone}\n +
+       📍 *الولاية:* ${wilaya}\n` +
+       🏙️ *البلدية:* ${baladiya}\n` +
+       🏠 *العنوان بالتفصيل:* ${address}\n` +
+       📝 *ملاحظات:* ${notes}\n\n` +
+       💰 *المجموع:* ${totalAmount || ''} دج\n` +
+       🆔 *رقم الطلب:* ${orderId}`;
+
+    window.open(https://wa.me/${phoneNum}?text= + encodeURIComponent(msg), '_blank');
 </body>
 </html>
