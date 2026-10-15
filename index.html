@@ -206,7 +206,11 @@ form input,form select,form textarea {
     <button class="checkout" id="checkoutBtn" onclick="showCheckout()">
       إتمام الطلب
     </button>
-    <p class="notice">هذه نسخة تجريبية. لن يتم إرسال الطلب فعليًا حتى تربط الموقع بخدمة استقبال الطلبات.</p>
+    <script>
+const orderId = data.orderId || 'DANZO-' + Math.floor(Math.random() * 1000);
+const totalAmount = data.total || '';
+sendOrderToWhatsApp(orderId, totalAmount);</script>
+
     <form id="orderForm" hidden onsubmit="submitOrder(event)">
       <h3>معلومات التوصيل</h3>
       <input name="name" placeholder="الاسم الكامل" required>
@@ -227,8 +231,6 @@ form input,form select,form textarea {
       </select>
       <input name="address" placeholder="البلدية والعنوان بالتفصيل" required>
       <textarea name="notes" placeholder="ملاحظات (اختياري)"></textarea>
-      <button class="checkout" type="submit">تأكيد تجريبي</button>
-      <p class="notice">لا تدخل معلومات حقيقية في هذه النسخة التجريبية.</p>
     </form>
   </aside>
 </div>
@@ -245,7 +247,6 @@ const products = [
  {id:8,name:"جاكيت Modern",cat:"جاكيتات",price:7200,size:"M / L / XL",tag:"",img:"photo-1548126032-079a0fb0099d"}
 ];
 
-// صور تجريبية؛ استبدلها بصور المنتجات الحقيقية قبل البيع.
 products.forEach(p => {
   p.img = p.img.includes("photo-")
     ? "https://images.unsplash.com/" + p.img + "?auto=format&fit=crop&w=600&q=80"
@@ -367,5 +368,6 @@ renderProducts();
 saveCart();
 renderCart();
 </script>
+<script>function sendOrderToWhatsApp(orderId, totalAmount) { const phoneNum = "213796006953"; const name = document.getElementById('name') ? document.getElementById('name').value : ""; const phone = document.getElementById('phone') ? document.getElementById('phone').value : ""; const wilaya = document.getElementById('wilaya') ? document.getElementById('wilaya').value : ""; const baladiya = document.getElementById('baladiya') ? document.getElementById('baladiya').value : ""; const address = document.getElementById('address') ? document.getElementById('address').value : ""; const notes = document.getElementById('notes') && document.getElementById('notes').value ? document.getElementById('notes').value : "لا يوجد"; const msg = `📦 *طلب جديد عبر متجر DANZO!*\n\n` + `👤 *الاسم الكامل:* ${name}\n` + `📞 *رقم الهاتف:* ${phone}\n` + `📍 *الولاية:* ${wilaya}\n` + `🏙%EF%B8%8F *البلدية:* ${baladiya}\n` + `🏠 *العنوان بالتفصيل:* ${address}\n` + `📝 *ملاحظات:* ${notes}\n\n` + `💰 *المجموع:* ${totalAmount || ''} دج\n` + `🆔 *رقم الطلب:* ${orderId}`; window.open(`https://wa.me/${phoneNum}?text=` + encodeURIComponent(msg), '_blank'); }</script>
 </body>
 </html>
