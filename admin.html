@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة المسؤول — NINJA DARK</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--black:#111;--gray-700:#4a4a4a;--gray-500:#808080;--gray-300:#d4d4d4;--gray-100:#f2f2f2;--white:#fff}
+*{box-sizing:border-box}
+body{margin:0;font-family:'Cairo',sans-serif;background:var(--gray-100);color:var(--black)}
+button,input,select{font:inherit}
+button{cursor:pointer}
+header{display:flex;justify-content:space-between;align-items:center;padding:16px 5%;background:var(--white);border-bottom:1px solid var(--gray-300)}
+.logo{font-size:22px;font-weight:800}.logo span{color:var(--gray-500)}
+.btn{border:0;background:var(--black);color:var(--white);padding:10px 16px;border-radius:5px;font-weight:700}
+.btn:hover{background:var(--gray-700)}
+.btn.light{background:var(--white);color:var(--black);border:1px solid var(--gray-300)}
+.btn.light:hover{border-color:var(--black)}
+main{max-width:1100px;margin:0 auto;padding:25px 5%}
+.box{background:var(--white);border:1px solid var(--gray-300);border-radius:7px;padding:20px;margin-bottom:20px}
+.login{max-width:380px;margin:70px auto}
+.login h1{margin-top:0;font-size:22px}
+label{display:grid;gap:5px;font-size:13px;font-weight:600}
+input,select{padding:10px;border:1px solid var(--gray-300);border-radius:4px;background:var(--white);width:100%}
+input:focus,select:focus{outline:2px solid var(--black)}
+.tabs{display:flex;gap:10px;margin-bottom:20px}
+.tabs .btn{background:var(--white);color:var(--black);border:1px solid var(--gray-300)}
+.tabs .btn.on{background:var(--black);color:var(--white);border-color:var(--black)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;align-items:end}
+.err{color:#a00;font-size:13px;min-height:18px;margin:8px 0 0}
+.row{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--gray-300);flex-wrap:wrap}
+.row:last-child{border-bottom:0}
+.row img{width:54px;height:54px;object-fit:cover;border-radius:4px;background:var(--gray-100)}
+.info{flex:1;min-width:200px;font-size:14px;line-height:1.8}
+.muted{color:var(--gray-500);font-size:12px}
+.acts{display:flex;gap:8px;flex-wrap:wrap}
+.acts .btn{padding:7px 12px;font-size:13px}
+.off{opacity:.5}
+.order{border:1px solid var(--gray-300);border-radius:6px;padding:14px;margin-bottom:12px}
+.order h3{margin:0 0 6px;font-size:16px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.order select{width:auto}
+.order ul{margin:8px 0;padding-inline-start:18px;font-size:13px}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">NINJA <span>DARK</span> — لوحة المسؤول</div>
+  <div class="acts"><a class="btn light" href="/" style="text-decoration:none">المتجر</a><button class="btn" id="logoutBtn" hidden>تسجيل الخروج</button></div>
+</header>
+
+<main>
+  <div class="box login" id="loginBox" hidden>
+    <h1>دخول المسؤول</h1>
+    <form id="loginForm">
+      <label>كلمة السر <input type="password" id="pwd" autocomplete="current-password" required></label>
+      <p class="err" id="loginErr"></p>
+      <button class="btn" style="width:100%">دخول</button>
+    </form>
+  </div>
+
+  <div id="panel" hidden>
+    <div class="tabs">
+      <button class="btn on" data-tab="orders">الطلبات</button>
+      <button class="btn" data-tab="products">المنتجات</button>
+    </div>
+
+    <section id="tab-orders"></section>
+
+    <section id="tab-products" hidden>
+      <div class="box">
+        <h2 style="margin-top:0" id="formTitle">إضافة منتج</h2>
+        <form id="pForm">
+          <input type="hidden" id="pId">
+          <div class="grid">
+            <label>الاسم <input id="pName" required></label>
+            <label>الصنف <input id="pCat" placeholder="تيشورتات" required></label>
+            <label>السعر (دج) <input id="pPrice" type="number" min="0" required></label>
+            <label>المقاسات <input id="pSizes" value="S / M / L / XL"></label>
+            <label>رابط الصورة <input id="pImg" type="url" placeholder="https://..."></label>
+            <label>الوسم (اختياري) <input id="pTag" placeholder="جديد"></label>
+            <div class="acts"><button class="btn">حفظ</button><button type="button" class="btn light" id="pReset">إلغاء</button></div>
+          </div>
+          <p class="err" id="pErr"></p>
+        </form>
+      </div>
+      <div class="box" id="pList"></div>
+    </section>
+  </div>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const money = n => new Intl.NumberFormat("fr-DZ").format(n) + " دج";
+const STATUSES = ["جديد","تم التأكيد","تم الشحن","مكتمل","ملغى"];
+let products = [];
+
+async function api(url, opts = {}) {
+  const r = await fetch(url, { headers: {"Content-Type":"application/json"}, ...opts });
+  let data = {};
+  try { data = await r.json(); } catch {}
+  if (r.status === 401 && !url.includes("login")) { showLogin(); throw new Error("انتهت الجلسة، ادخل من جديد."); }
+  if (!r.ok) throw new Error(data.error || "حدث خطأ.");
+  return data;
+}
+
+function showLogin(){ $("loginBox").hidden = false; $("panel").hidden = true; $("logoutBtn").hidden = true; }
+function showPanel(){ $("loginBox").hidden = true; $("panel").hidden = false; $("logoutBtn").hidden = false; loadOrders(); loadProducts(); }
+
+$("loginForm").onsubmit = async e => {
+  e.preventDefault();
+  $("loginErr").textContent = "";
+  try { await api("/api/admin/login", { method:"POST", body: JSON.stringify({ password: $("pwd").value }) }); $("pwd").value = ""; showPanel(); }
+  catch (err) { $("loginErr").textContent = err.message; }
+};
+$("logoutBtn").onclick = async () => { try { await api("/api/admin/logout", { method:"POST", body:"{}" }); } catch {} showLogin(); };
+
+document.querySelectorAll(".tabs .btn").forEach(b => b.onclick = () => {
+  document.querySelectorAll(".tabs .btn").forEach(x => x.classList.toggle("on", x === b));
+  $("tab-orders").hidden = b.dataset.tab !== "orders";
+  $("tab-products").hidden = b.dataset.tab !== "products";
+});
+
+/* ===== الطلبات ===== */
+async function loadOrders(){
+  try {
+    const orders = await api("/api/admin/orders");
+    $("tab-orders").innerHTML = orders.length ? orders.map(o => `
+      <div class="order">
+        <h3><span>${esc(o.id)} — ${esc(o.name)}</span>
+          <select data-order="${esc(o.id)}">${STATUSES.map(s => `<option ${s===o.status?"selected":""}>${s}</option>`).join("")}</select></h3>
+        <div class="muted">${new Date(o.createdAt).toLocaleString("fr-DZ")}</div>
+        <div>📞 ${esc(o.phone)} — 📍 ${esc(o.wilaya)} — ${esc(o.address)}</div>
+        ${o.notes && o.notes !== "لا يوجد" ? `<div class="muted">ملاحظات: ${esc(o.notes)}</div>` : ""}
+        <ul>${o.items.map(i => `<li>${esc(i.name)} | ${esc(i.size)} | × ${i.qty} | ${money(i.price*i.qty)}</li>`).join("")}</ul>
+        <strong>المجموع: ${money(o.total)}</strong>
+      </div>`).join("") : '<div class="box">ما كاين حتى طلب بعد.</div>';
+  } catch (err) { $("tab-orders").innerHTML = `<div class="box err">${esc(err.message)}</div>`; }
+}
+$("tab-orders").onchange = async e => {
+  const id = e.target.dataset.order;
+  if (!id) return;
+  try { await api("/api/admin/orders/" + encodeURIComponent(id), { method:"PATCH", body: JSON.stringify({ status: e.target.value }) }); }
+  catch (err) { alert(err.message); loadOrders(); }
+};
+
+/* ===== المنتجات ===== */
+async function loadProducts(){
+  try { products = await api("/api/admin/all-products"); renderProducts(); }
+  catch (err) { $("pList").innerHTML = `<p class="err">${esc(err.message)}</p>`; }
+}
+function renderProducts(){
+  $("pList").innerHTML = products.length ? products.map(p => `
+    <div class="row ${p.active === false ? "off" : ""}">
+      <img src="${esc(p.image)}" alt="">
+      <div class="info"><strong>${esc(p.name)}</strong><br><span class="muted">${esc(p.category)} — ${esc(p.sizes)}</span><br>${money(p.price)}${p.active === false ? " (مخفي)" : ""}</div>
+      <div class="acts" data-id="${p.id}">
+        <button class="btn light" data-act="edit">تعديل</button>
+        <button class="btn light" data-act="toggle">${p.active === false ? "إظهار" : "إخفاء"}</button>
+        <button class="btn light" data-act="delete">حذف</button>
+      </div>
+    </div>`).join("") : "<p>ما كاين حتى منتج.</p>";
+}
+$("pList").onclick = async e => {
+  const act = e.target.dataset.act, id = e.target.parentElement.dataset.id;
+  if (!act) return;
+  const p = products.find(x => x.id === Number(id));
+  if (act === "edit") {
+    $("pId").value = p.id; $("pName").value = p.name; $("pCat").value = p.category;
+    $("pPrice").value = p.price; $("pSizes").value = p.sizes; $("pImg").value = p.image; $("pTag").value = p.tag || "";
+    $("formTitle").textContent = "تعديل منتج"; window.scrollTo({ top: 0, behavior: "smooth" });
+  } else if (act === "delete") {
+    if (!confirm("متأكد تبغي تحذف هذا المنتج نهائياً؟")) return;
+    try { await api("/api/admin/products/" + id, { method:"DELETE" }); loadProducts(); }
+    catch (err) { alert(err.message); }
+  } else {
+    try { await api("/api/admin/products/" + id, { method:"PATCH", body: JSON.stringify({ active: p.active === false }) }); loadProducts(); }
+    catch (err) { alert(err.message); }
+  }
+};
+function resetForm(){ $("pForm").reset(); $("pId").value = ""; $("pSizes").value = "S / M / L / XL"; $("formTitle").textContent = "إضافة منتج"; $("pErr").textContent = ""; }
+$("pReset").onclick = resetForm;
+$("pForm").onsubmit = async e => {
+  e.preventDefault();
+  const body = JSON.stringify({ name:$("pName").value, category:$("pCat").value, price:$("pPrice").value, sizes:$("pSizes").value, image:$("pImg").value, tag:$("pTag").value });
+  const id = $("pId").value;
+  try {
+    await api(id ? "/api/admin/products/" + id : "/api/admin/products", { method: id ? "PATCH" : "POST", body });
+    resetForm(); loadProducts();
+  } catch (err) { $("pErr").textContent = err.message; }
+};
+
+/* ===== بداية ===== */
+(async () => {
+  try { const me = await api("/api/admin/me"); me.isAdmin ? showPanel() : showLogin(); }
+  catch { showLogin(); }
+})();
+</script>
+</body>
+</html>
